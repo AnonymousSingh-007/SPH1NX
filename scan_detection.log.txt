@@ -1,0 +1,21 @@
+2025-05-30 13:18:11,498 - INFO - Logging setup complete.
+2025-05-30 13:18:17,818 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,847 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,847 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,847 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,850 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,856 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,857 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,858 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,858 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,860 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336
+2025-05-30 13:18:23,861 - INFO - UDP SCAN detected from 192.168.1.58 on port 443
+2025-05-30 13:18:23,863 - INFO - UDP SCAN detected from 142.250.77.35 on port 59336

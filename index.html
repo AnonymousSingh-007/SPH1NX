@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPH1NX - Cyber Scan Detector by Samratth Singh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        /* Custom font for a hacker-ish feel (Inter is a good default, but monospace is better for logs) */
+        body {
+            font-family: 'Inter', sans-serif; /* Fallback to sans-serif */
+            background-color: #0a0a0a; /* Very dark background */
+            color: #00ff00; /* Neon green text */
+        }
+        .log-output, .logo-output {
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'; /* Monospace for code/logs */
+            background-color: #1a1a1a; /* Slightly lighter dark for content areas */
+            border: 1px solid #008000; /* Green border */
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5); /* Green glow */
+            overflow-y: auto; /* Enable scrolling for logs */
+            white-space: pre-wrap; /* Preserve whitespace and wrap long lines */
+            word-break: break-all; /* Break words to prevent overflow */
+            padding: 1rem;
+            border-radius: 0.5rem; /* Rounded corners */
+        }
+        .btn-run, .btn-stop { /* Combined styles for consistency */
+            background-color: #008000; /* Green button */
+            color: #0a0a0a; /* Dark text on button */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.7); /* Subtle glow */
+        }
+        .btn-run:hover, .btn-stop:hover {
+            background-color: #00b300; /* Lighter green on hover */
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
+        }
+        .btn-stop {
+            background-color: #cc0000; /* Red for stop button */
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.7); /* Red glow */
+        }
+        .btn-stop:hover {
+            background-color: #ff3333; /* Lighter red on hover */
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.9); /* More intense red glow */
+        }
+        .spinner {
+            border: 4px solid rgba(0, 255, 0, 0.3);
+            border-top: 4px solid #00ff00;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen p-4 md:p-8">
+
+    <header class="text-center mb-8">
+        <h1 class="text-4xl md:text-5xl font-bold text-green-500 mb-2 tracking-wider">
+            SPH1NX <span class="text-white">Scan Detector</span>
+        </h1>
+        <p class="text-lg md:text-xl text-gray-400">
+            A Cyber Security Project by <span class="text-green-400 font-semibold">Samratth Singh</span>
+        </p>
+    </header>
+
+    <main class="flex-grow container mx-auto max-w-6xl">
+        <div class="flex flex-col md:flex-row items-center justify-center mb-8 gap-4">
+            <button id="runButton" class="btn-run px-8 py-3 rounded-lg text-xl font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
+                <span id="runButtonText">Run SPH1NX</span>
+                <div id="runLoadingSpinner" class="spinner hidden ml-2"></div>
+            </button>
+            <button id="stopButton" class="btn-stop px-8 py-3 rounded-lg text-xl font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 hidden">
+                <span id="stopButtonText">Stop SPH1NX</span>
+                <div id="stopLoadingSpinner" class="spinner hidden ml-2"></div>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="logo-output h-64 lg:h-96 flex items-center justify-center text-center">
+                <pre id="logoDisplay" class="text-green-300 text-sm md:text-base lg:text-lg"></pre>
+            </div>
+
+            <div class="log-output h-64 lg:h-96">
+                <pre id="logDisplay" class="text-green-200 text-xs md:text-sm"></pre>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-8 text-gray-500 text-sm">
+        &copy; 2025 SPH1NX. All rights reserved.
+    </footer>
+
+    <script>
+        // Get references to DOM elements
+        const runButton = document.getElementById('runButton');
+        const runButtonText = document.getElementById('runButtonText');
+        const runLoadingSpinner = document.getElementById('runLoadingSpinner');
+        const stopButton = document.getElementById('stopButton');
+        const stopButtonText = document.getElementById('stopButtonText');
+        const stopLoadingSpinner = document.getElementById('stopLoadingSpinner');
+        const logoDisplay = document.getElementById('logoDisplay');
+        const logDisplay = document.getElementById('logDisplay');
+
+        // SPH1NX ASCII Art Logo from your Python code
+        const sph1nxLogo = `
+  __    ___      _      __ __  __
+/ _\\  / _ \\ /\\  /\\|  /\\ \\ \\\\ \\/ /
+\\ \\  / /_)// /_/ /| | /  \\/ / \\  /
+_\\ \\/ ___// __  / | |/ /\\  /  /  \\
+\\__\\/   \\/ /_/  |_|\\_\\ \\/  /_/\\_\\
+        `;
+
+        let socket; // Declare socket variable globally
+
+        // Function to run the script and display real-time logs
+        async function runScript() {
+            // Disable run button, enable and show stop button
+            runButton.disabled = true;
+            runButtonText.textContent = 'Connecting...';
+            runLoadingSpinner.classList.remove('hidden');
+
+            stopButton.disabled = true; // Disable stop button until connection is established
+            stopButton.classList.remove('hidden'); // Show stop button
+
+            // Clear previous output
+            logoDisplay.textContent = '';
+            logDisplay.textContent = '';
+
+            // Display the SPH1NX logo immediately
+            logoDisplay.textContent = sph1nxLogo;
+
+            // Initialize Socket.IO connection
+            // Connects to the backend server running on http://127.0.0.1:5000
+            socket = io('http://127.0.0.1:5000');
+
+            socket.on('connect', () => {
+                console.log('WebSocket connected!');
+                logDisplay.textContent += 'WebSocket connected. Starting SPH1NX...\n';
+                runButtonText.textContent = 'Running...';
+                stopButton.disabled = false; // Enable stop button once connected
+                // Emit an event to the backend to start the Python script
+                socket.emit('start_sph1nx');
+            });
+
+            socket.on('log_update', (data) => {
+                // Append each log line received from the backend
+                logDisplay.textContent += data + '\n';
+                logDisplay.scrollTop = logDisplay.scrollHeight; // Auto-scroll to bottom
+            });
+
+            socket.on('script_stopped', (message) => {
+                console.log('Script stopped by backend:', message);
+                logDisplay.textContent += `\n--- ${message} ---`;
+                // Reset buttons after script stops
+                resetButtons();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('WebSocket disconnected.');
+                logDisplay.textContent += '\n--- SPH1NX session ended ---';
+                resetButtons();
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('WebSocket connection error:', error);
+                logDisplay.textContent += `\nError: Could not connect to the backend server. Please ensure it is running at http://127.0.0.1:5000 (e.g., 'python app.py').`;
+                resetButtons();
+            });
+        }
+
+        // Function to stop the script
+        async function stopScript() {
+            if (socket && socket.connected) {
+                stopButton.disabled = true;
+                stopButtonText.textContent = 'Stopping...';
+                stopLoadingSpinner.classList.remove('hidden');
+                runButton.disabled = true; // Keep run button disabled while stopping
+
+                socket.emit('stop_sph1nx'); // Send stop signal to backend
+            } else {
+                logDisplay.textContent += '\nError: Not connected to the backend server to stop the script.';
+                resetButtons();
+            }
+        }
+
+        // Helper function to reset button states
+        function resetButtons() {
+            runButtonText.textContent = 'Run SPH1NX';
+            runLoadingSpinner.classList.add('hidden');
+            runButton.disabled = false;
+
+            stopButtonText.textContent = 'Stop SPH1NX';
+            stopLoadingSpinner.classList.add('hidden');
+            stopButton.classList.add('hidden'); // Hide stop button
+            stopButton.disabled = true; // Ensure it's disabled when hidden
+        }
+
+
+        // Attach event listeners to the buttons
+        runButton.addEventListener('click', runScript);
+        stopButton.addEventListener('click', stopScript);
+
+        // Initial display of the logo when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            logoDisplay.textContent = sph1nxLogo;
+            resetButtons(); // Ensure buttons are in initial state
+        });
+    </script>
+</body>
+</html>
